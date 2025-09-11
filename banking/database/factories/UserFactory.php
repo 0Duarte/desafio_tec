@@ -26,9 +26,10 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
+            'document_id' => fake()->unique()->numerify('###########'),
+            'type' => $type = fake()->randomElement(['common', 'company']),
+            'document_type' => $type === 'company' ? 'cnpj' : fake()->randomElement(['cpf', 'cnpj']),
             'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
         ];
     }
 

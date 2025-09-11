@@ -21,7 +21,13 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'document_id',
+        'document_type',
+        'type',
     ];
+
+    CONST COMMON = 'common';
+    CONST COMPANY = 'company';
 
     /**
      * The attributes that should be hidden for serialization.
@@ -32,6 +38,11 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class, 'user_id');
+    }
 
     /**
      * Get the attributes that should be cast.

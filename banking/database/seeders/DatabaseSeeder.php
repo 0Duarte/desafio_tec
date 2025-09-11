@@ -17,19 +17,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
 
-        Customer::factory()->count(5)->create()->each(function ($customer) {
+        User::factory()->count(10)->create()->each(function ($user) {
             Wallet::create([
-                'user_id' => $customer->id,
-                'user_type' => Customer::class,
+                'user_id' => $user->id,
                 'balance' => rand(100, 1000),
-            ]);
-        });
-
-        Company::factory()->count(5)->create()->each(function ($company) {
-            Wallet::create([
-                'user_id' => $company->id,
-                'user_type' => Company::class,
-                'balance' => 0,
             ]);
         });
     }
