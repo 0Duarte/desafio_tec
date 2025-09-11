@@ -10,8 +10,8 @@ class Wallet extends Model
         'balance',
     ];
 
-    public function user()
+    public function hasBalance(int $amount): bool
     {
-        return $this->morphTo();
+        return $this->balance < $amount;
     }
 }
