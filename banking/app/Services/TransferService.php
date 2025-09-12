@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Jobs\NotifyTransferJob;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Models\Wallet;
+use App\Notifications\TransferCompleted;
 use App\Repositories\WalletRepository;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -42,7 +44,6 @@ class TransferService
             $payer_wallet = $this->walletRepository->findByUserId($payerId); 
 
             $this->validateTransferRules($payer_wallet, $amountInCents);
-            $this->authorizeExternalService->authorize();
 
             $payee_wallet = $this->walletRepository->findByUserId($payeeId);
  
@@ -55,7 +56,8 @@ class TransferService
                 'status'   => 'completed',
             ]);
 
-            dispatch(new NotifyTransferJob($transaction));
+            $this->authorizeExternalService->authorize();
+            $this->notifyTransfer($payee_wallet->user);
 
             return $transaction;
         });
@@ -70,5 +72,10 @@ class TransferService
         if ($payer->hasBalance($amount)) {
             throw new Exception("Saldo insuficiente.");
         }
+    }
+
+    private function notifyTransfer(User $user): void
+    {
+        $user->notify(new TransferCompleted());
     }
 }
