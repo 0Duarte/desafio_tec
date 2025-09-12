@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('document_id')->unique();
             $table->enum('document_type', ['cpf', 'cnpj']);
             $table->string('password');
-            $table->enum('type', ['common', 'company']);
+            $table->enum('type', ['common', 'merchant']);
             $table->timestamps();
         });
 

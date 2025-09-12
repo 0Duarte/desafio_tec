@@ -22,8 +22,8 @@ class TransferController extends Controller
         $data = $request->validated();
 
         try {
-            $transaction = $this->service->transfer($data['payer'], $data['payee'], $data['value']);
-            return response()->json($transaction, 201);
+            $transfer = $this->service->transfer($data['payer'], $data['payee'], $data['value']);
+            return response()->json($transfer, 201);
         } catch (Exception $e) {
             return response()->json([
                 'error' => $e->getMessage()
