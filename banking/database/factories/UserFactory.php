@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\UserTypeEnum;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -27,8 +28,8 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'document_id' => fake()->unique()->numerify('###########'),
-            'type' => $type = fake()->randomElement(['common', 'company']),
-            'document_type' => $type === 'company' ? 'cnpj' : fake()->randomElement(['cpf', 'cnpj']),
+            'type' => $type = fake()->randomElement([UserTypeEnum::COMMON, UserTypeEnum::MERCHANT]),
+            'document_type' => $type === UserTypeEnum::MERCHANT ? 'cnpj' : fake()->randomElement(['cpf', 'cnpj']),
             'password' => static::$password ??= Hash::make('password'),
         ];
     }

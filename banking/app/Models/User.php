@@ -26,9 +26,6 @@ class User extends Authenticatable
         'type',
     ];
 
-    CONST COMMON = 'common';
-    CONST COMPANY = 'company';
-
     /**
      * The attributes that should be hidden for serialization.
      *

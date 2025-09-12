@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Company;
-use App\Models\Customer;
 use App\Models\User;
 use App\Models\Wallet;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
