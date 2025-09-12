@@ -9,7 +9,7 @@ class AuthorizationExternalService
 {
     public function authorize()
     {
-        $response = Http::get('https://util.devi.tools/api/v2/authorize');
+        $response = Http::get(config('transfer.external_service.authorize'));
 
         if ($response->json('data.authorization')) {
             return true;
