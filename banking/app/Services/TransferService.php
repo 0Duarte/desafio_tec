@@ -2,80 +2,95 @@
 
 namespace App\Services;
 
-use App\Jobs\NotifyTransferJob;
-use App\Models\Transaction;
+use App\DTO\TransferRequestDTO;
+use App\Exceptions\MerchantCannotTransferException;
+use App\Exceptions\TransferFailedException;
+use App\Exceptions\InsufficientBalanceException;
+use App\Models\Transfer;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Notifications\TransferCompleted;
+use App\Repositories\TransferRepository;
 use App\Repositories\WalletRepository;
 use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class TransferService
 {
     private $walletRepository;
+    private $transferRepository;
     private $authorizeExternalService;
-    
+
     public function __construct()
     {
         $this->authorizeExternalService = new AuthorizationExternalService();
+        $this->transferRepository = new TransferRepository();
         $this->walletRepository = new WalletRepository();
     }
 
     /**
      * Do a transfer between two wallets
      *
-     * @param int $payerId
-     * @param int $payeeId
-     * @param float $amount
-     * @return Transaction
+     * @param TransferRequestDTO $requestDto
+     * @return Transfer
      * @throws Exception
      */
-    public function transfer(int $payerId, int $payeeId, float $amount): Transaction
+    public function transfer(TransferRequestDTO $requestDto): Transfer
     {
-        $amountInCents = (int) round($amount * 100);
+        $amount = $requestDto->amountInCents();
 
-        if ($payerId === $payeeId) {
-            throw new Exception('Payer and payee cannot be the same');
+        $transfer = $this->transferRepository->initTransfer(
+            $requestDto->payerId,
+            $requestDto->payeeId,
+            $amount
+        );
+
+        try {
+            DB::transaction(function () use ($amount, $requestDto, $transfer) {
+                $payerWallet = $this->walletRepository->findByUserId($requestDto->payerId);
+                $this->validateTransferRules($payerWallet, $amount);
+
+                $payeeWallet = $this->walletRepository->findByUserId($requestDto->payeeId);
+                $this->walletRepository->updateBalance($payerWallet, $payeeWallet, $amount);
+
+                $this->authorizeExternalService->authorize();
+                $this->transferRepository->finalizeTransfer($transfer, $amount);
+
+                $this->notifyTransfer($payeeWallet->user);
+            });
+        } catch (Throwable $e) {
+            $this->transferRepository->updateTransferStatus($transfer, Transfer::STATUS_FAILED);
+            $this->logError($e, $transfer);
+            throw new TransferFailedException($e->getMessage());
         }
 
-        return DB::transaction(function () use ($amountInCents, $payerId, $payeeId) {
-
-            $payer_wallet = $this->walletRepository->findByUserId($payerId); 
-
-            $this->validateTransferRules($payer_wallet, $amountInCents);
-
-            $payee_wallet = $this->walletRepository->findByUserId($payeeId);
- 
-            $this->walletRepository->updateBalance($payer_wallet, $payee_wallet, $amountInCents);
-
-            $transaction = Transaction::create([
-                'payer_id' => $payer_wallet->user_id,
-                'payee_id' => $payee_wallet->user_id,
-                'amount'   => $amountInCents,
-                'status'   => 'completed',
-            ]);
-
-            $this->authorizeExternalService->authorize();
-            $this->notifyTransfer($payee_wallet->user);
-
-            return $transaction;
-        });
+        return $transfer;
     }
 
     private function validateTransferRules(Wallet $payer, int $amount): void
     {
-        if ($payer->isCompany()) {
-            throw new Exception("Lojistas não podem realizar transferências.");
+        if ($payer->isMerchant()) {
+            throw new MerchantCannotTransferException();
         }
 
-        if ($payer->hasBalance($amount)) {
-            throw new Exception("Saldo insuficiente.");
+        if (!$payer->hasBalance($amount)) {
+            throw new InsufficientBalanceException();
         }
     }
 
     private function notifyTransfer(User $user): void
     {
         $user->notify(new TransferCompleted());
+    }
+
+    private function logError(Throwable $exception, Transfer $transfer): void
+    {
+        Log::error('Transfer error', [
+            'transfer_id' => $transfer->id,
+            'amount' => $transfer->amount,
+            'exception' => $exception->getMessage(),
+        ]);
     }
 }
