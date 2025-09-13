@@ -18,7 +18,7 @@ class TransferRepository
 
     public function finalizeTransfer(Transfer $transfer, $amount): void
     {
-        $transfer->update(['amount' => $amount]);
+        $transfer->update(['amount' => $amount, 'status' => Transfer::STATUS_COMPLETED]);
     }
 
     public function updateTransferStatus(Transfer $transfer, string $status): void
