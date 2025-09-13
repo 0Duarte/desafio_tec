@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Transfer extends Model
 {
+    const STATUS_PENDING = 'pending';
+    const STATUS_COMPLETED = 'completed';
+    const STATUS_FAILED = 'failed';
+    
     protected $fillable = [
         'amount',
         'type',
