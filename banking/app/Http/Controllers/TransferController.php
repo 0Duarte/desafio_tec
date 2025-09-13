@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\TransferRequestDTO;
 use App\Http\Requests\TransferRequest;
 use App\Services\TransferService;
 use Exception;
@@ -21,13 +22,17 @@ class TransferController extends Controller
     {
         $data = $request->validated();
 
+        $dto = new TransferRequestDTO(
+            payerId: $data['payer'],
+            payeeId: $data['payee'],
+            amount: $data['value']
+        );
+        
         try {
-            $transfer = $this->service->transfer($data['payer'], $data['payee'], $data['value']);
-            return response()->json($transfer, 201);
+            $transfer = $this->service->transfer($dto);
+            return response($transfer, 201);
         } catch (Exception $e) {
-            return response()->json([
-                'error' => $e->getMessage()
-            ], 422);
+            return response()->json(['error' => $e->getMessage()], 422);
         }
     }
 }

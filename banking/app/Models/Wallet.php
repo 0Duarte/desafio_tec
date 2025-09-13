@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserTypeEnum;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -15,7 +16,7 @@ class Wallet extends Model
 
     public function hasBalance(int $amount): bool
     {
-        return $this->balance < $amount;
+        return $this->balance >= $amount;
     }
     
     public function user()
@@ -23,8 +24,8 @@ class Wallet extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function isCompany(): bool
+    public function isMerchant(): bool
     {
-        return $this->user->type === 'company';
+    return $this->user->type === UserTypeEnum::MERCHANT->value;
     }
 }
