@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\UserTypeEnum;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -10,9 +11,16 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Wallet extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'balance',
     ];
+
+    public function transfers()
+    {
+        return $this->hasMany(Transfer::class, 'payer_id');
+    }
 
     public function hasBalance(int $amount): bool
     {
