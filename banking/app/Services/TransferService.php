@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\DTO\TransferRequestDTO;
 use App\Exceptions\MerchantCannotTransferException;
-use App\Exceptions\TransferFailedException;
 use App\Exceptions\InsufficientBalanceException;
 use App\Models\Transfer;
 use App\Models\User;
@@ -72,6 +71,14 @@ class TransferService
         return $transfer;
     }
 
+    /**
+     * Validate transfer rules
+     * @param Wallet $payer
+     * @param int $amount
+     * @return void
+     * @throws MerchantCannotTransferException
+     * @throws InsufficientBalanceException
+     */
     private function validateTransferRules(Wallet $payer, int $amount): void
     {
         if ($payer->isMerchant()) {
@@ -83,11 +90,21 @@ class TransferService
         }
     }
 
+    /**
+     * Notify user of completed transfer
+     * @param User $user
+     * @return void
+     */
     private function notifyTransfer(User $user): void
     {
         $user->notify(new TransferCompleted());
     }
 
+    /**
+     * Log transfer errors
+     * @param Throwable $exception
+     * @param Transfer $transfer
+     */
     private function logError(Throwable $exception, Transfer $transfer): void
     {
         Log::error('Transfer error', [
