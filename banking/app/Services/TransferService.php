@@ -23,11 +23,14 @@ class TransferService
     private $transferRepository;
     private $authorizeExternalService;
 
-    public function __construct()
-    {
-        $this->authorizeExternalService = new AuthorizationExternalService();
-        $this->transferRepository = new TransferRepository();
-        $this->walletRepository = new WalletRepository();
+    public function __construct(
+        AuthorizationExternalService $authorizeExternalService,
+        TransferRepository $transferRepository,
+        WalletRepository $walletRepository
+    ) {
+        $this->authorizeExternalService = $authorizeExternalService;
+        $this->transferRepository = $transferRepository;
+        $this->walletRepository = $walletRepository;
     }
 
     /**
@@ -63,7 +66,7 @@ class TransferService
         } catch (Throwable $e) {
             $this->transferRepository->updateTransferStatus($transfer, Transfer::STATUS_FAILED);
             $this->logError($e, $transfer);
-            throw new TransferFailedException($e->getMessage());
+            throw $e;
         }
 
         return $transfer;
