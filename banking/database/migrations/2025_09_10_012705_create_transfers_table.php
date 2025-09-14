@@ -11,17 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('transfers', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('document_id')->unique();
-            $table->enum('document_type', ['cpf', 'cnpj']);
-            $table->string('password');
-            $table->enum('type', ['common', 'merchant']);
+            $table->foreignId('payer_id')->constrained('wallets')->onDelete('cascade');
+            $table->foreignId('payee_id')->constrained('wallets')->onDelete('cascade');
+            $table->integer('amount');
+            $table->enum('status', ['pending', 'completed', 'failed'])->default('pending');
             $table->timestamps();
         });
-
     }
 
     /**
@@ -29,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('transfers');
     }
 };

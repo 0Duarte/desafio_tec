@@ -21,6 +21,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'document_id',
+        'document_type',
+        'type',
     ];
 
     /**
@@ -32,6 +35,16 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class, 'user_id');
+    }
+
+    public function transfers()
+    {
+        return $this->hasMany(Transfer::class, 'payer_id');
+    }
 
     /**
      * Get the attributes that should be cast.

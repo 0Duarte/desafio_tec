@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [ develop, main ]
+  pull_request:
+    branches: [ develop, main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_sqlite
+
+      - name: Copy .env.example to .env
+        working-directory: banking
+        run: cp -f .env.example .env
+
+      - name: Install dependencies
+        working-directory: banking
+        run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: Run migrations
+        working-directory: banking
+        env:
+          APP_KEY: base64:SomeRandomString==
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+        run: php artisan migrate --env=testing
+
+      - name: Run tests
+        working-directory: banking
+        env:
+          APP_KEY: base64:SomeRandomString==
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+        run: php artisan test --env=testing
+
+      - name: Run static analysis
+        working-directory: banking
+        run: composer analyse
